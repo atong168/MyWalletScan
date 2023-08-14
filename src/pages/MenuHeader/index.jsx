@@ -1,31 +1,31 @@
-import {Menu, Badge} from 'antd';
+import {Menu} from 'antd';
 import {useEffect, useState} from 'react';
 import {useLocation, useNavigate} from "react-router-dom";
 import {GithubOutlined, TwitterOutlined} from "@ant-design/icons";
 import './index.css'
-import {getEthPrice} from "@utils";
+import React from "react";
+import {useTranslation} from "react-i18next";
+import {Select} from 'antd';
+import initPage from "@utils/initPage.js";
 
-const EthPrice = () => {
-    const [ethPrice, setEthPrice] = useState(null);
+const {Option} = Select;
 
-    useEffect(() => {
-        const fetchPrice = async () => {
-            const price = await getEthPrice();
-            setEthPrice(price);
-        };
+function LanguageSwitcher() {
+    const {i18n} = useTranslation();
 
-        fetchPrice();
-        const interval = setInterval(fetchPrice, 10000);
+    const changeLanguage = (language) => {
+        i18n.changeLanguage(language);
+        localStorage.setItem('i18nextLng', language);
+    };
 
-        return () => clearInterval(interval);
-    }, []);
+    return (
+        <Select defaultValue={i18n.language} style={{width: 120}} onChange={changeLanguage}>
+            <Option value="zh">中文</Option>
+            <Option value="en">English</Option>
+        </Select>
+    );
+}
 
-    if (ethPrice === null) {
-        return <div>Loading ETH Price...</div>;
-    }
-
-    return <div>ETH Price: ${ethPrice}</div>
-};
 
 const MenuHeader = () => {
     const items = [
@@ -34,20 +34,24 @@ const MenuHeader = () => {
             key: 'zksync',
         },
         {
+            label: 'zkInfo',
+            key: 'zk_info',
+        },
+        {
             label: 'Stark',
             key: 'stark',
         },
         {
+            label: 'StarkInfo',
+            key: 'stark_info',
+        },
+        {
+            label: "Linea",
+            key: 'linea',
+        },
+        {
             label: 'LayerZero',
             key: 'layer',
-        },
-        {
-            label: 'Mirror',
-            key: 'mirror',
-        },
-        {
-            label: 'Deposit',
-            key: 'deposit',
         },
         {
             label: 'Coffee',
@@ -55,11 +59,9 @@ const MenuHeader = () => {
         },
         {
             label: (
-                <Badge dot>
-                    <a href="https://twitter.com/jingluo0" target="_blank" rel="noopener noreferrer">
-                        <TwitterOutlined/>
-                    </a>
-                </Badge>
+                <a href="https://twitter.com/jingluo0" target="_blank" rel="noopener noreferrer">
+                    <TwitterOutlined/>
+                </a>
             ),
             key: 'twitter',
         },
@@ -72,19 +74,24 @@ const MenuHeader = () => {
             key: 'github',
         },
         {
-            label: <EthPrice/>,
-            key: 'ethPrice',
-        }
+            label: <LanguageSwitcher/>,
+            key: 'languageSwitch',
+        },
     ];
-
     const navigate = useNavigate();
     const location = useLocation();
     const [current, setCurrent] = useState(location.pathname.replace('/', '') || 'zksync');
 
     const onClick = (e) => {
+        if (e.key === 'languageSwitch' || e.key === 'ethPrice') {
+            return;
+        }
+
         setCurrent(e.key);
     };
-
+    useEffect(() => {
+        initPage();
+    }, []);
     useEffect(() => {
         if (location.pathname.replace('/', '') === 'twitter' || location.pathname.replace('/', '') === 'github') {
             return;
